@@ -2,7 +2,7 @@
 
 # download cpr and dependencies
 echo 'Now downloading dependencies. Sit tight! This might take a few minutes!'
-git clone https://github.com/Microsoft/vcpkg.git
+git clone git@github.com:microsoft/vcpkg.gito
 cd vcpkg
 ./bootstrap-vcpkg.sh
 ./vcpkg integrate install

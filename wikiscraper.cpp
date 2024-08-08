@@ -6,9 +6,12 @@
 #include "wikiscraper.h"
 #include "error.h"
 
-using std::cout;            using std::endl;
-using std::cerr;            using std::string;
-using std::unordered_map;   using std::unordered_set;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::string;
+using std::unordered_map;
+using std::unordered_set;
 
 /*
  * You should delete the code in this function and
@@ -19,21 +22,24 @@ using std::unordered_map;   using std::unordered_set;
 
 // TODO: ASSIGNMENT 2 TASK 4:
 // Please implement a function that can determine if a wiki link is valid or not.
-// As a reminder, it needs to take in a string and return whether or not 
+// As a reminder, it needs to take in a string and return whether or not
 // # or : is contained in the string.
 // Estimated length: ~5-10 lines
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // BEGIN STUDENT CODE HERE
-bool valid_wikilink(const string& link) {
+bool valid_wikilink(const string &link)
+{
     // replace these lines!
-    (void) link;
-    throw std::invalid_argument("Not implemented yet.\n");
+    auto is_valid = std::all_of(link.begin(), link.end(), [](const auto &c)
+                                { return c != '#' && c != ':'; });
+    return is_valid;
 }
 // END STUDENT CODE HERE
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-unordered_set<string> findWikiLinks(const string& inp) {
+unordered_set<string> findWikiLinks(const string &inp)
+{
     /* Delimiter for start of a link  */
     static const string delim = "href=\"/wiki/";
 
@@ -42,7 +48,8 @@ unordered_set<string> findWikiLinks(const string& inp) {
     auto url_start = inp.begin();
     auto end = inp.end();
 
-    while(true) {
+    while (true)
+    {
 
         // TODO: ASSIGNMENT 2 TASK 1:
         // Set url_start to the next location of "delim" (starting your search at url_start), using std::search.
@@ -53,20 +60,23 @@ unordered_set<string> findWikiLinks(const string& inp) {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // BEGIN STUDENT CODE HERE
         // Please delete this line when you start working!
-        throw std::invalid_argument("Not implemented yet.\n");
+        // throw std::invalid_argument("Not implemented yet.\n");
+        url_start = std::search(url_start, end, delim.begin(), delim.end());
+        if (url_start == end)
+            break;
         // END STUDENT CODE HERE
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         // TODO: ASSIGNMENT 2 TASK 2:
         // Set url_end to the end of the wikilink. Start searching after the delimeter you found above.
-        // Make sure to use std::find! (std::find looks for a single element in a container, e.g. character in 
-        // a string—std::search looks for a series of elements in a container, like a substring in a string. 
+        // Make sure to use std::find! (std::find looks for a single element in a container, e.g. character in
+        // a string—std::search looks for a series of elements in a container, like a substring in a string.
         // remember that a string is represented as an array of characters, and is also a container!)
         // Estimated length: 1 lines
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // BEGIN STUDENT CODE HERE (delete/edit this line)
-        auto url_end = url_start;
+        auto url_end = std::find(std::find(url_start, end, '\"') + 1, end, '\"');
         // END STUDENT CODE HERE
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,10 +84,11 @@ unordered_set<string> findWikiLinks(const string& inp) {
         // Last exercise of this function! Create a string from the two iterators (url_start and url_end) above
         // using a string constructor. Make sure you start the string AFTER the delimiter you found in task 5!
         // Estimated length: 1 lines
-        
+
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // BEGIN STUDENT CODE HERE (delete/edit this line)
         string link;
+        link.assign(url_start + delim.length(), url_end);
         // END STUDENT CODE HERE
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -85,42 +96,43 @@ unordered_set<string> findWikiLinks(const string& inp) {
          * Only add link to the set if it is valid i.e. doesn't
          * contain a ':' or a '#'.
          */
-        if(valid_wikilink(link)){
+        if (valid_wikilink(link))
+        {
             ret.insert(link);
         }
 
         url_start = url_end;
-
     }
     return ret;
-
 }
-
 
 /*
  * ==================================================================================
  * |                Don't edit anything below here, but take a peek!                |
  * ==================================================================================
  */
-unordered_set<string> WikiScraper::getLinkSet(const string& page_name) {
-    if(linkset_cache.find(page_name) == linkset_cache.end()) {
+unordered_set<string> WikiScraper::getLinkSet(const string &page_name)
+{
+    if (linkset_cache.find(page_name) == linkset_cache.end())
+    {
         auto links = findWikiLinks(getPageSource(page_name));
         linkset_cache[page_name] = links;
     }
     return linkset_cache[page_name];
 }
 
-
-WikiScraper::WikiScraper() {
+WikiScraper::WikiScraper()
+{
     (void)getPageSource("Main_Page");
 }
 
-
-string createPageUrl(const string& page_name) {
+string createPageUrl(const string &page_name)
+{
     return "https://en.wikipedia.org/wiki/" + page_name;
 }
 
-void notFoundError(const string& msg, const string& page_name, const string& url) {
+void notFoundError(const string &msg, const string &page_name, const string &url)
+{
     const string title = "    AN ERROR OCCURED DURING EXECUTION.    ";
     const string border(title.size() + 4, '*');
     cerr << endl;
@@ -137,9 +149,11 @@ void notFoundError(const string& msg, const string& page_name, const string& url
     errorPrint();
 }
 
-string WikiScraper::getPageSource(const string &page_name) {
+string WikiScraper::getPageSource(const string &page_name)
+{
     const static string not_found = "Wikipedia does not have an article with this exact name.";
-    if(page_cache.find(page_name) == page_cache.end()) {
+    if (page_cache.find(page_name) == page_cache.end())
+    {
         string url = createPageUrl(page_name);
         // using the cpr library to get the HTML content of a webpage!
         // we do so by aking a GET REST request to a wikipedia webpage, which
@@ -149,24 +163,22 @@ string WikiScraper::getPageSource(const string &page_name) {
         cpr::Response r = cpr::Get(cpr::Url{url});
 
         string ret = r.text;
-        if (r.status_code != 200) {
+        if (r.status_code != 200)
+        {
             notFoundError("Couldn't get page source. Have you entered a valid link?", page_name, url);
             return "";
         }
-        if(std::search(ret.begin(), ret.end(), not_found.begin(), not_found.end()) != ret.end()){
+        if (std::search(ret.begin(), ret.end(), not_found.begin(), not_found.end()) != ret.end())
+        {
             notFoundError("Page does not exist!", page_name, url);
             return "";
         }
         size_t indx = ret.find("plainlinks hlist navbar mini");
-        if(indx != string::npos) {
+        if (indx != string::npos)
+        {
             return ret.substr(0, indx);
         }
         page_cache[page_name] = ret;
     }
     return page_cache[page_name];
 }
-
-
-
-
-
